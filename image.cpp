@@ -59,7 +59,17 @@ rgb *readPPM(const char *filename, int *cols, int *rows, int * colors)
 		if(image) 
         {
 			// Read the data
-			if(binary)	fread(image, sizeof(rgb), (*rows) * (*cols), fp);
+			if(binary)	
+			{
+				unsigned char crgb[3 * (*rows) * (*cols)];
+				fread(image, sizeof(crgb), (*rows) * (*cols), fp);
+				for(int x=0;x<*rows;x++) 
+                    for(int y=0;y<*cols;y++) 
+					{
+						int tmp = x + *rows * y;
+						image[tmp]=rgb((int)(crgb[tmp*3]), (int)(crgb[tmp*3+1]), (int)(crgb[tmp*3+2]));
+					}
+			}
 			else 
             {
 				for(int x=0;x<*rows;x++) 
@@ -86,8 +96,14 @@ void ColorImage::load(const char * fname)
 
 	int c;
 	rgb * colors = readPPM(fname, &w, &h, &c);
-	
+
 	N = w * h;
+/*
+	freopen("image.out", "w", stdout);
+	for (int i = 0; i < N; i++)
+		printf("%d %d %d\n", colors[i].r, colors[i].g, colors[i].b);
+	printf("\n\n\n");*/
+	
 	printf("image loaded, w: %d, y: %d, c: %d.\n", w, h, c);
 
 	data = new cie_lab[N];
@@ -157,9 +173,19 @@ void GrayImage::saveColor(const char *fname, const ColorImage &source) const {
 	FILE *fp;
 	fp = fopen(fname, "wb");
 	if(fp) {
+
+		unsigned char crgb[3 * w * h];
+		for(int x = 0; x < w; x++) 
+            for(int y = 0; y < h; y++) 
+			{
+				int tmp = x + w * y;
+				crgb[tmp*3] = rval[tmp].r;
+				crgb[tmp*3+1] = rval[tmp].g;
+				crgb[tmp*3+2] = rval[tmp].b;
+			}
 		fprintf(fp, "P6\n");
 		fprintf(fp, "%d %d\n%d\n", w, h, 255);
-		fwrite(rval, sizeof(rgb), N, fp);
+		fwrite(crgb, sizeof(rgb), N, fp);
 	}
 	fclose(fp);
 
