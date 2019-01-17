@@ -62,7 +62,7 @@ rgb *readPPM(const char *filename, int *cols, int *rows, int * colors)
 			if(binary)	
 			{
 				unsigned char crgb[3 * (*rows) * (*cols)];
-				fread(image, sizeof(crgb), (*rows) * (*cols), fp);
+				fread(crgb, sizeof(char), 3 * (*rows) * (*cols), fp);
 				for(int x=0;x<*rows;x++) 
                     for(int y=0;y<*cols;y++) 
 					{
@@ -98,8 +98,8 @@ void ColorImage::load(const char * fname)
 	rgb * colors = readPPM(fname, &w, &h, &c);
 
 	N = w * h;
-/*
-	freopen("image.out", "w", stdout);
+
+	/*freopen("image.out", "w", stdout);
 	for (int i = 0; i < N; i++)
 		printf("%d %d %d\n", colors[i].r, colors[i].g, colors[i].b);
 	printf("\n\n\n");*/
@@ -111,6 +111,11 @@ void ColorImage::load(const char * fname)
 	int i;
 	for(i = 0; i < N; i++) data[i] = cie_lab(colors[i]);
 	
+	/*freopen("load.out", "w", stdout);
+	for(int i=0;i<N;i++) 
+		printf("%.2lf %.2lf %.2lf\n", data[i].l, data[i].a, data[i].b);
+	printf("\n");*/
+
 	delete [] colors;
 }
 
@@ -125,9 +130,18 @@ void GrayImage::save(const char *fname) const
 	fp = fopen(fname, "wb");
 	if(fp) 
     {
+		unsigned char crgb[3 * w * h];
+		for(int x = 0; x < w; x++) 
+            for(int y = 0; y < h; y++) 
+			{
+				int tmp = x + w * y;
+				crgb[tmp*3] = (unsigned char)(rval[tmp].r);
+				crgb[tmp*3+1] = (unsigned char)(rval[tmp].g);
+				crgb[tmp*3+2] = (unsigned char)(rval[tmp].b);
+			}
 		fprintf(fp, "P6\n");
 		fprintf(fp, "%d %d\n%d\n", w, h, 255);
-		fwrite(rval, sizeof(rgb), N, fp);
+		fwrite(crgb, sizeof(char) * 3, N, fp);
 	}
 	fclose(fp);
 
@@ -170,6 +184,11 @@ void GrayImage::saveColor(const char *fname, const ColorImage &source) const {
 		rval[i] = cie_lab(data[i],((source.data)[i]).a,((source.data)[i]).b).to_rgb();
 	}
 
+	/*freopen("log.out", "w", stdout);
+	for(int i=0;i<N;i++) 
+		printf("%d %d %d\n", rval[i].r, rval[i].g, rval[i].b);
+	printf("\n");*/
+
 	FILE *fp;
 	fp = fopen(fname, "wb");
 	if(fp) {
@@ -179,13 +198,13 @@ void GrayImage::saveColor(const char *fname, const ColorImage &source) const {
             for(int y = 0; y < h; y++) 
 			{
 				int tmp = x + w * y;
-				crgb[tmp*3] = rval[tmp].r;
-				crgb[tmp*3+1] = rval[tmp].g;
-				crgb[tmp*3+2] = rval[tmp].b;
+				crgb[tmp*3] = (unsigned char)(rval[tmp].r);
+				crgb[tmp*3+1] = (unsigned char)(rval[tmp].g);
+				crgb[tmp*3+2] = (unsigned char)(rval[tmp].b);
 			}
 		fprintf(fp, "P6\n");
 		fprintf(fp, "%d %d\n%d\n", w, h, 255);
-		fwrite(crgb, sizeof(rgb), N, fp);
+		fwrite(crgb, sizeof(char) * 3, N, fp);
 	}
 	fclose(fp);
 

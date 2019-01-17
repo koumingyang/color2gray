@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <vector>
 #include <algorithm>
+#include <cstring>
 #include "color.h"
 
 extern double alpha;
